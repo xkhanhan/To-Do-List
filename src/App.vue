@@ -17,9 +17,6 @@ export default {
   components: {
     myFooter,
   },
-  created() {
-    console.log(this.$route);
-  },
   data() {
     return {};
   },
@@ -37,6 +34,7 @@ overflow: hidden;
     height: 100%;
 }
 .containter{
+    overflow: scroll;
     height: calc(100% - 60px);
     padding: 13px;
     box-sizing: border-box;
@@ -54,5 +52,7 @@ overflow: hidden;
   width: 100%;
   height: 100%;
 }
-
+::-webkit-scrollbar{
+    width:0;
+}
 </style>

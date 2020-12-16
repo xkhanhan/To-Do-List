@@ -4,50 +4,54 @@
     :visible.sync="$store.state.dialogVisible"
     width="95%"
     :before-close="handleClose"
-    top="20px"
+    top="60px"
   >
     <el-form
       ref="form"
       :rules="rules"
       labelPosition="top"
-      :model="form"
+      :model="formData"
       label-width="80px"
+      size="mini"
     >
       <el-form-item label="计划名称" prop="title">
-        <el-input v-model="form.title" placeholder="请输入内容"></el-input>
+        <el-input v-model="formData.title" placeholder="请输入内容"></el-input>
       </el-form-item>
       <el-form-item label="计划起始时间" prop="time1">
         <el-date-picker
           type="date"
           placeholder="选择起始日期"
-          v-model="form.time1"
+          v-model="formData.time1"
           style="width: 100%"
         ></el-date-picker>
       </el-form-item>
 
       <el-form-item label="计划类型" prop="type">
-        <el-autocomplete
-          class="inline-input"
-          v-model="form.type"
-          :fetch-suggestions="querySearch"
-          placeholder="请输入内容"
-          clearable
-        ></el-autocomplete>
+        <el-select v-model="formData.type" filterable placeholder="请输入内容">
+          <el-option
+            v-for="item in typeArray"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          >
+          </el-option>
+        </el-select>
       </el-form-item>
 
       <el-form-item label="计划内容" prop="container">
         <el-input
           type="textarea"
           placeholder="请输入内容"
-          v-model="form.container"
+          v-model="formData.container"
           maxlength="200"
+          :autosize="{ minRows: 3, maxRows: 6 }"
           show-word-limit
         ></el-input>
       </el-form-item>
 
       <el-form-item>
         <el-button type="primary" @click="onSubmit">立即创建</el-button>
-        <el-button @click="$store.state.dialogVisible = false">取消</el-button>
+        <el-button @click="handleClose">取消</el-button>
       </el-form-item>
     </el-form>
   </el-dialog>
@@ -60,16 +64,26 @@ export default {
       type: Object,
       required: true,
     },
+
+    /**
+     * 用于判断是 添加buttton 还是 修改button
+     * 方便点击表单的创建时执行不同的操作
+     */
+    typeBtn: {
+      type: String,
+      default: "add",
+    },
   },
   data() {
     return {
-      form: {
-        title: "",
-        time1: "",
-        type: "",
-        container: "",
-      },
-
+      formData: {},
+      typeArray: [
+        { value: "运动", label: "运动" },
+        { value: "学习", label: "学习" },
+        { value: "工作", label: "工作" },
+        { value: "旅行", label: "旅行" },
+        { value: "其他", label: "其他" },
+      ],
       // 校验规则
       rules: {
         title: [
@@ -81,17 +95,10 @@ export default {
             trigger: "blur",
           },
         ],
-        time1: [
-          {
-            required: true,
-            type: "date",
-            message: "时间格式不正确",
-            tigger: "blur",
-          },
-        ],
-        type: [{ required: true, message: "请输入计划标题", trigger: "blur" }],
+        time1: [{ required: true, message: "计划起始时间", trigger: "blur" }],
+        type: [{ required: true, message: "请输入计划类型" }],
         container: [
-          { required: true, message: "请输入计划标题", trigger: "blur" },
+          { required: true, message: "请输入计划内容", trigger: "blur" },
           {
             max: 200,
             min: 3,
@@ -105,7 +112,7 @@ export default {
   },
   mounted() {
     this.restaurants = this.loadAll();
-    this.form = {
+    this.formData = {
       ...this.defaulteForm,
     };
   },
@@ -113,22 +120,45 @@ export default {
     // 关闭弹窗事件
     handleClose() {
       this.$store.state.dialogVisible = false;
-    },
-    // 提交表单事件
-    onSubmit() {
-      // 进行规则校验
-      this.$refs["form"].validate((valid) => {
-        // 规则不符合时不进行任何操作
-        if (!valid) {
-          return false;
-        } else {
-          // 关闭弹窗
-          this.$store.commit("dialogVisible", false);
-          this.$store.commit("addArray", this.form);
-        }
-      });
+      console.log("x");
     },
 
+    // 提交表单事件
+    onSubmit() {
+      if (this.$store.state.submit) {
+        return;
+      } else {
+        // 进行规则校验
+        this.$refs["form"].validate((valid) => {
+          // 规则不符合时不进行任何操作
+          if (!valid) {
+            return false;
+          } else {
+            this.$store.state.submit = true;
+            this.$store.commit("dialogVisible", false); // 关闭弹窗
+            this.formData.container = this.preText(this.formData.container);
+            // 判断是修改还是添加
+            if (this.typeBtn == "add") {
+              this.$store.commit("addArray", this.formData); // 提交一个数据添加
+            } else if (this.typeBtn == "update") {
+              this.$store.commit("updateArray", this.formData);
+            }
+          }
+        });
+      }
+    },
+    /**
+     * 处理文本域的格式
+     */
+    preText(pretext) {
+      return pretext
+        .replace(/</g, "&lt")
+        .replace(/>/g, "&gt")
+        .replace(/<\//g, "&lt/")
+        .replace(/\r\n/g, "<br/>")
+        .replace(/\n/g, "<br/>")
+        .replace(/\s/g, "&nbsp;");
+    },
     // 选择计划类型时输入框筛选功能
     querySearch(queryString, cb) {
       var restaurants = this.restaurants;
@@ -159,7 +189,7 @@ export default {
   },
   watch: {
     defaulteForm() {
-      this.form = {
+      this.formData = {
         ...this.defaulteForm,
       };
     },

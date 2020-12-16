@@ -1,7 +1,8 @@
 const isOverdue = Symbol('isOverdue');
 
 export default class MyLocalStorage {
-    constructor() {
+    constructor(key = 'default') {
+        this.key = key;
         this.localStorage = window.localStorage;
     }
     /**
@@ -13,9 +14,9 @@ export default class MyLocalStorage {
      * @param { Number } expires 有效时间(单位：毫秒)
      * @param { Number } starTime 起始时间(时间戳)
      */
-    setItem(key, value) {
+    setItem(value) {
         const str = JSON.stringify(value);
-       this.localStorage.setItem(key, str);
+       this.localStorage.setItem(this.key, str);
     }
 
     /**
@@ -23,13 +24,13 @@ export default class MyLocalStorage {
      * @param {String} key 
      * @return {Object} 
      */
-    getItem(key) {
+    getItem() {
         // 使用原生的 localStorage 上的获取方法 
-        const str = this.localStorage.getItem(key)
+        const str = this.localStorage.getItem(this.key)
         // 转换
         let obj = JSON.parse(str);
         // 使用 方法判断是否过期
-        const isOver = this[isOverdue](key, obj);
+        const isOver = this[isOverdue](obj);
         obj = isOver ? null : obj;
 
         return obj;
@@ -39,7 +40,7 @@ export default class MyLocalStorage {
      * 判断该条数据是否过期
      * @param {*} obj 
      */
-    [isOverdue](key, obj) {
+    [isOverdue](obj) {
         try {
             const startTime = obj.startTime;
             const expires = obj.expires;
@@ -48,7 +49,7 @@ export default class MyLocalStorage {
             const time = startTime + expires / 1000;
 
             if (now >= time) {
-                this.localStorage.removeItem(key);
+                this.localStorage.removeItem(this.key);
                 return true;
             }
            
@@ -57,9 +58,8 @@ export default class MyLocalStorage {
         }
     }
 
-    remove(key){
-        
-        this.localStorage.removeItem(key);
+    remove(){
+        this.localStorage.removeItem(this.key);
     }
 
     removeAll() {

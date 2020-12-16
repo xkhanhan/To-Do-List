@@ -8,14 +8,8 @@
     </el-col>
     <el-col>
       <router-link to="/data">
-        <span class="el-icon-receiving"></span>
-        <p>数据</p>
-      </router-link>
-    </el-col>
-    <el-col>
-      <router-link to="/user">
-        <span class="el-icon-user"></span>
-        <p>个人</p>
+        <span class="el-icon-s-data" ></span>
+        <p>图表</p>
       </router-link>
     </el-col>
   </el-row>

@@ -10,8 +10,6 @@ const routes = [
     },
     { path: '/index', name: 'index', component: () => import('./layout/index.vue') },
     { path: '/data', name: 'data', component: () => import('@/layout/data.vue') },
-    { path: '/user', name: 'user', component: () => import('@/layout/user.vue') }
-
 ]
 
 export default new VueRouter({
